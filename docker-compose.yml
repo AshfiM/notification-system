@@ -1,0 +1,67 @@
+x-broker-props: &broker-props
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+    KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+    KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    KAFKA_MIN_INSYNC_REPLICAS: 2
+    CLUSTER_ID: kafka-cluster
+    PATH: "/opt/kafka/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" # path of the kafka binary files
+services:
+
+  broker1:
+    image: apache/kafka:4.4.0
+    container_name: broker1
+    ports:
+      - "19092:9092"
+    environment:
+      <<: *broker-props
+      KAFKA_NODE_ID: 1 # node id
+      KAFKA_PROCESS_ROLES: controller, broker #roles of each node
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER # name of the listener used for controller communication
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL # name of the listener used for inter-broker communication
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT, EXTERNAL:PLAINTEXT, CONTROLLER:PLAINTEXT # security protocols for each listener's
+      KAFKA_LISTENERS: CONTROLLER://:9093, INTERNAL://:9094, EXTERNAL://:9092 # how this broker can be reached
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker1:9094, EXTERNAL://localhost:19092 # address advertised by this broker for clients to communicate
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker1:9093,2@broker2:9093,3@broker3:9093 # how to reach the other voters include itself
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - kafka-net
+  broker2:
+    image: apache/kafka:4.4.0
+    container_name: broker2
+    ports:
+      - "29092:9092"
+    environment:
+      <<: *broker-props
+      KAFKA_NODE_ID: 2 # node id
+      KAFKA_PROCESS_ROLES: controller, broker #roles of each node
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER # name of the listener used for controller communication
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL # name of the listener used for inter-broker communication
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT, EXTERNAL:PLAINTEXT, CONTROLLER:PLAINTEXT # security protocols for each listener's
+      KAFKA_LISTENERS: CONTROLLER://:9093, INTERNAL://:9094, EXTERNAL://:9092 # how this broker can be reached
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker2:9094, EXTERNAL://localhost:29092 # address advertised by this broker for clients to communicate
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker1:9093,2@broker2:9093,3@broker3:9093 # how to reach the other voters include itself
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - kafka-net
+  broker3:
+    image: apache/kafka:4.4.0
+    container_name: broker3
+    ports:
+      - "39092:9092"
+    environment:
+      <<: *broker-props
+      KAFKA_NODE_ID: 3 # node id
+      KAFKA_PROCESS_ROLES: controller, broker #roles of each node
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER # name of the listener used for controller communication
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL # name of the listener used for inter-broker communication
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT, EXTERNAL:PLAINTEXT, CONTROLLER:PLAINTEXT # security protocols for each listener's
+      KAFKA_LISTENERS: CONTROLLER://:9093, INTERNAL://:9094, EXTERNAL://:9092 # how this broker can be reached
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker3:9094, EXTERNAL://localhost:39092 # address advertised by this broker for clients to communicate
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker1:9093,2@broker2:9093,3@broker3:9093 # how to reach the other voters include itself
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - kafka-net
+networks:
+  kafka-net:
+    driver: bridge
